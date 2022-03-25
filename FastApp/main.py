@@ -1,7 +1,7 @@
-from cgitb import text
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
+import uvicorn
 
 
 class Blog(BaseModel):
@@ -36,4 +36,8 @@ def comments(id):
 def create_blog(blog: Blog):
     return {'data': f"Blog is created with the title '{blog.title}'"}
 
-#start at 55:58 (Request Body)
+
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="127.0.0.1", port= 9000)
+
+#start at 1:38:54 (Get blogs from database)
