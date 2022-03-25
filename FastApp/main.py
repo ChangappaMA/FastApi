@@ -1,5 +1,13 @@
+from cgitb import text
 from typing import Optional
 from fastapi import FastAPI
+from pydantic import BaseModel
+
+
+class Blog(BaseModel):
+    title: str
+    body: str
+    publish: Optional[bool]
 
 app = FastAPI()
 
@@ -22,3 +30,10 @@ def show(id: int):
 @app.get('/blog/{id}/comments')
 def comments(id):
     return {'data': {'1','2'}}
+
+
+@app.post('/blog')
+def create_blog(blog: Blog):
+    return {'data': f"Blog is created with the title '{blog.title}'"}
+
+#start at 55:58 (Request Body)
