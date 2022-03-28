@@ -1,13 +1,21 @@
+from turtle import title
 from urllib import request
 from fastapi import FastAPI, Depends, status, Response, HTTPException
-from .schemas import Blog
-from .models import Base, BlogModel
+from .schemas import Blog, ShowBlog, User, UserDetails
+from .models import Base, BlogModel, UserModel
 from .database import SessionLocal, engine
+from .hashing import Hash
 from sqlalchemy.orm import Session
+from typing import List
+
+
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
+
+
+
 
 def get_db():
     db = SessionLocal()
@@ -44,13 +52,13 @@ def update_blog(id: int, blog: Blog, db: Session = Depends(get_db)):
     db.commit()
     return 'Updated'
 
-@app.get('/blog')
+@app.get('/blog', response_model=List[ShowBlog])
 def get_all_blog(db: Session = Depends(get_db)):
     blogs = db.query(BlogModel).all()
     return blogs
 
 
-@app.get('/blog/{id}', status_code=200)
+@app.get('/blog/{id}', status_code=200, response_model=ShowBlog)
 def get_a_blog(id: int, response: Response, db: Session = Depends(get_db)):
     blog = db.query(BlogModel).filter(BlogModel.id == id).first()
     if not blog:
@@ -59,4 +67,21 @@ def get_a_blog(id: int, response: Response, db: Session = Depends(get_db)):
     return blog
 
 
-#### 2:08:02 ######
+@app.post('/users', response_model=UserDetails)
+def create_users(request: User, db: Session = Depends(get_db)):
+    hashedPassword = Hash.bcrypt(request.password)
+    user = UserModel(name=request.name, email=request.email, password=hashedPassword)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.get('/user/{id}', response_model=UserDetails)
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = db.query(UserModel).filter(UserModel.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with id {id} not found")
+
+    return user
